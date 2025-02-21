@@ -12,7 +12,6 @@ import { useReminder } from '../composable/useReminder'
 import { watch } from 'vue'
 const { checkReminders } = useReminder()
 
-
 const showContextMenu = ref(false)
 const handleContextMenu = (event) => {
   event.preventDefault()
@@ -65,14 +64,14 @@ onMounted(() => {
   // 立即检查一次
   checkReminders()
   // 设置定时检查
-  timer = window.setInterval(checkReminders, 5000);
+  timer = window.setInterval(checkReminders, 5000)
 })
 
 onUnmounted(() => {
   if (timer) {
-    clearInterval(timer);
+    clearInterval(timer)
   }
-});
+})
 </script>
 
 <template>
@@ -94,10 +93,14 @@ onUnmounted(() => {
     </TresCanvas>
 
     <!-- 添加右键菜单组件 -->
-    <ContextMenu v-if="showContextMenu" :isResting="isResting" @exercise="handleExercise" @close="closeContextMenu" />
+    <ContextMenu
+      v-if="showContextMenu"
+      :isResting="isResting"
+      @exercise="handleExercise"
+      @close="closeContextMenu"
+    />
     <!-- <ReminderManager /> -->
   </div>
-
 </template>
 
 <style scoped>

@@ -36,7 +36,7 @@ const hello = () => {
 defineExpose({
   play,
   sleep,
-  hello
+  hello,
 })
 
 const { scene: model, animations } = await useGLTF(modelUrl)

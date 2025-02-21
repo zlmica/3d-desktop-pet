@@ -1,4 +1,4 @@
-import Dexie, { Table } from "dexie";
+import Dexie, { Table } from 'dexie'
 
 /**
  * 任务接口定义
@@ -13,23 +13,23 @@ import Dexie, { Table } from "dexie";
  * @property {number} [dueDate] - 截止日期时间戳
  */
 export interface Task {
-  id?: string;
-  title: string;
-  description?: string;
-  status: "pending" | "in-progress" | "completed";
-  priority: "low" | "medium" | "high";
-  createdAt: number;
-  updatedAt: number;
-  dueDate?: number;
+  id?: string
+  title: string
+  description?: string
+  status: 'pending' | 'in-progress' | 'completed'
+  priority: 'low' | 'medium' | 'high'
+  createdAt: number
+  updatedAt: number
+  dueDate?: number
 }
 
 /**
  * 重复类型枚举
  */
 export enum RepeatType {
-  NONE = "none", // 不重复
-  CUSTOM = "custom", // 自定义间隔（分钟）
-  DAILY = "daily", // 每天
+  NONE = 'none', // 不重复
+  CUSTOM = 'custom', // 自定义间隔（分钟）
+  DAILY = 'daily', // 每天
 }
 
 /**
@@ -48,17 +48,17 @@ export enum RepeatType {
  * @property {number} updatedAt - 更新时间戳
  */
 export interface Reminder {
-  id?: string;
-  title: string;
-  description?: string;
-  isEnabled: boolean;
-  repeatType: RepeatType;
-  reminderTime: string;
-  lastAcknowledgedAt?: number;
-  customInterval?: number;
-  dailyTime?: string;
-  createdAt: number;
-  updatedAt: number;
+  id?: string
+  title: string
+  description?: string
+  isEnabled: boolean
+  repeatType: RepeatType
+  reminderTime: string
+  lastAcknowledgedAt?: number
+  customInterval?: number
+  dailyTime?: string
+  createdAt: number
+  updatedAt: number
 }
 
 /**
@@ -67,18 +67,18 @@ export interface Reminder {
  * @extends Dexie
  */
 class PetAppDB extends Dexie {
-  tasks!: Table<Task>;
-  reminders!: Table<Reminder>;
+  tasks!: Table<Task>
+  reminders!: Table<Reminder>
 
   constructor() {
-    super("petApp");
+    super('petApp')
 
     // 定义数据库表结构和索引
     this.version(1).stores({
-      tasks: "++id, title, status, priority, createdAt, updatedAt, dueDate",
+      tasks: '++id, title, status, priority, createdAt, updatedAt, dueDate',
       reminders:
-        "++id, title, reminderTime, repeatType, isEnabled, lastAcknowledgedAt, createdAt",
-    });
+        '++id, title, reminderTime, repeatType, isEnabled, lastAcknowledgedAt, createdAt',
+    })
   }
 
   /**
@@ -86,13 +86,13 @@ class PetAppDB extends Dexie {
    * @param {Omit<Task, 'id' | 'createdAt' | 'updatedAt'>} task - 任务数据
    * @returns {Promise<string>} 返回新增任务的ID
    */
-  async addTask(task: Omit<Task, "id" | "createdAt" | "updatedAt">) {
-    const timestamp = Date.now();
+  async addTask(task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) {
+    const timestamp = Date.now()
     return await this.tasks.add({
       ...task,
       createdAt: timestamp,
       updatedAt: timestamp,
-    });
+    })
   }
 
   /**
@@ -103,12 +103,12 @@ class PetAppDB extends Dexie {
    */
   async updateTask(
     id: string,
-    changes: Partial<Omit<Task, "id" | "createdAt">>
+    changes: Partial<Omit<Task, 'id' | 'createdAt'>>
   ) {
     return await this.tasks.update(id, {
       ...changes,
       updatedAt: Date.now(),
-    });
+    })
   }
 
   /**
@@ -117,15 +117,15 @@ class PetAppDB extends Dexie {
    * @returns {Promise<string>} 返回新增提醒的ID
    */
   async addReminder(
-    reminder: Omit<Reminder, "id" | "createdAt" | "updatedAt">
+    reminder: Omit<Reminder, 'id' | 'createdAt' | 'updatedAt'>
   ) {
-    const timestamp = Date.now();
+    const timestamp = Date.now()
     return await this.reminders.add({
       ...reminder,
       lastAcknowledgedAt: undefined,
       createdAt: timestamp,
       updatedAt: timestamp,
-    });
+    })
   }
 
   /**
@@ -133,56 +133,54 @@ class PetAppDB extends Dexie {
    * @returns {Promise<Reminder[]>} 返回需要提醒的项目列表
    */
   async checkReminders(): Promise<Reminder[]> {
-    const now = new Date();
+    const now = new Date()
 
     return await this.reminders
       .filter((reminder) => reminder.isEnabled)
       .filter((reminder) => {
-        const reminderTime = new Date(reminder.reminderTime);
+        const reminderTime = new Date(reminder.reminderTime)
 
         if (reminder.lastAcknowledgedAt) {
-          const lastAcknowledged = new Date(reminder.lastAcknowledgedAt);
-          return reminderTime <= now && lastAcknowledged < reminderTime;
+          const lastAcknowledged = new Date(reminder.lastAcknowledgedAt)
+          return reminderTime <= now && lastAcknowledged < reminderTime
         }
 
-        return reminderTime <= now;
+        return reminderTime <= now
       })
-      .toArray();
+      .toArray()
   }
 
   /**
    * 确认提醒
    */
   async acknowledgeReminder(id: string) {
-    const reminder = await this.reminders.get(id);
-    if (!reminder) return 0;
+    const reminder = await this.reminders.get(id)
+    if (!reminder) return 0
 
-    const now = new Date();
-    let reminderTime: string | undefined;
-    let isEnabled: boolean = true;
+    const now = new Date()
+    let reminderTime: string | undefined
+    let isEnabled: boolean = true
 
     // 根据重复类型计算下一次提醒时间
     switch (reminder.repeatType) {
       case RepeatType.DAILY:
         if (reminder.dailyTime) {
-          const next = new Date(now);
-          next.setDate(next.getDate() + 1);
-          const [hours, minutes] = reminder.dailyTime.split(":");
-          next.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-          reminderTime = next.toISOString();
+          const next = new Date(now)
+          next.setDate(next.getDate() + 1)
+          const [hours, minutes] = reminder.dailyTime.split(':')
+          next.setHours(parseInt(hours), parseInt(minutes), 0, 0)
+          reminderTime = next.toISOString()
         }
-        break;
+        break
       case RepeatType.CUSTOM:
         if (reminder.customInterval) {
-          const next = new Date(
-            now.getTime() + reminder.customInterval * 60000
-          );
-          reminderTime = next.toISOString();
+          const next = new Date(now.getTime() + reminder.customInterval * 60000)
+          reminderTime = next.toISOString()
         }
-        break;
+        break
       default:
-        isEnabled = false;
-        reminderTime = reminder.reminderTime;
+        isEnabled = false
+        reminderTime = reminder.reminderTime
     }
 
     return await this.reminders.update(id, {
@@ -190,7 +188,7 @@ class PetAppDB extends Dexie {
       reminderTime,
       isEnabled,
       updatedAt: Date.now(),
-    });
+    })
   }
 
   /**
@@ -203,7 +201,7 @@ class PetAppDB extends Dexie {
     return await this.reminders.update(id, {
       isEnabled: enabled,
       updatedAt: Date.now(),
-    });
+    })
   }
 
   /**
@@ -214,7 +212,7 @@ class PetAppDB extends Dexie {
     return {
       tasks: await this.tasks.toArray(),
       reminders: await this.reminders.toArray(),
-    };
+    }
   }
 
   /**
@@ -224,18 +222,18 @@ class PetAppDB extends Dexie {
    * @param {Reminder[]} [data.reminders] - 提醒数据
    */
   async importData(data: { tasks?: Task[]; reminders?: Reminder[] }) {
-    await this.transaction("rw", [this.tasks, this.reminders], async () => {
+    await this.transaction('rw', [this.tasks, this.reminders], async () => {
       // 清除现有数据
-      await Promise.all([this.tasks.clear(), this.reminders.clear()]);
+      await Promise.all([this.tasks.clear(), this.reminders.clear()])
 
       // 导入新数据
-      if (data.tasks?.length) await this.tasks.bulkAdd(data.tasks);
-      if (data.reminders?.length) await this.reminders.bulkAdd(data.reminders);
-    });
+      if (data.tasks?.length) await this.tasks.bulkAdd(data.tasks)
+      if (data.reminders?.length) await this.reminders.bulkAdd(data.reminders)
+    })
   }
 }
 
 // 创建数据库实例
-const db = new PetAppDB();
+const db = new PetAppDB()
 
-export default db;
+export default db

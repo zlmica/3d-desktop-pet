@@ -13,9 +13,8 @@ const newTask = ref({
   title: '',
   description: '',
   priority: 'medium' as const,
-  dueDate: ''
+  dueDate: '',
 })
-
 
 // 初始化加载数据
 onMounted(async () => {
@@ -55,25 +54,42 @@ function formatDate(timestamp: number) {
   // 将两个日期都转换为当天 00:00:00 的时间戳来比较天数差异
   const dateDay = new Date(date.getFullYear(), date.getMonth(), date.getDate())
   const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const diffDays = Math.floor((dateDay.getTime() - nowDay.getTime()) / (1000 * 60 * 60 * 24))
+  const diffDays = Math.floor(
+    (dateDay.getTime() - nowDay.getTime()) / (1000 * 60 * 60 * 24)
+  )
 
   if (diffDays === 0) {
-    return '今天 ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    return (
+      '今天 ' +
+      date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    )
   } else if (diffDays === 1) {
-    return '明天 ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    return (
+      '明天 ' +
+      date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    )
   } else if (diffDays === -1) {
-    return '昨天 ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    return (
+      '昨天 ' +
+      date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    )
   } else if (diffDays > 1 && diffDays < 7) {
-    return `${diffDays}天后 ` + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    return (
+      `${diffDays}天后 ` +
+      date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    )
   } else if (diffDays < -1 && diffDays > -7) {
-    return `${-diffDays}天前 ` + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    return (
+      `${-diffDays}天前 ` +
+      date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    )
   } else {
     return date.toLocaleString('zh-CN', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     })
   }
 }
@@ -114,15 +130,13 @@ const showToast = ref(false)
  */
 async function addTask() {
   if (!newTask.value.title.trim()) {
-    throw new Error();
+    throw new Error()
   }
   // 检查标题是否重复
-  const existingTask = tasks.value.find(
-    (t) => t.title === newTask.value.title
-  );
+  const existingTask = tasks.value.find((t) => t.title === newTask.value.title)
   if (existingTask) {
     showToast.value = true
-    throw new Error();
+    throw new Error()
   }
 
   await db.addTask({
@@ -130,7 +144,9 @@ async function addTask() {
     description: newTask.value.description,
     status: 'pending',
     priority: newTask.value.priority,
-    dueDate: newTask.value.dueDate ? new Date(newTask.value.dueDate).getTime() : undefined
+    dueDate: newTask.value.dueDate
+      ? new Date(newTask.value.dueDate).getTime()
+      : undefined,
   })
 
   // 重置表单
@@ -138,7 +154,7 @@ async function addTask() {
     title: '',
     description: '',
     priority: 'medium',
-    dueDate: ''
+    dueDate: '',
   }
 
   await loadTasks()
@@ -185,8 +201,7 @@ async function handleAddTask() {
   try {
     await addTask()
     switchTab('list')
-  } catch (error) {
-  }
+  } catch (error) {}
 }
 </script>
 
@@ -195,18 +210,26 @@ async function handleAddTask() {
     <div class="h-full flex flex-col">
       <!-- Tab 切换 -->
       <div class="flex px-5 pt-5 gap-2.5 bg-white">
-        <button class="px-5 py-2.5 rounded-t-lg text-sm transition-all duration-300 ease-in-out" :class="[
-          activeTab === 'list'
-            ? 'bg-green-500 text-white'
-            : 'bg-gray-100 hover:bg-gray-200'
-        ]" @click="switchTab('list')">
+        <button
+          class="px-5 py-2.5 rounded-t-lg text-sm transition-all duration-300 ease-in-out"
+          :class="[
+            activeTab === 'list'
+              ? 'bg-green-500 text-white'
+              : 'bg-gray-100 hover:bg-gray-200',
+          ]"
+          @click="switchTab('list')"
+        >
           任务列表
         </button>
-        <button class="px-5 py-2.5 rounded-t-lg text-sm transition-all duration-300 ease-in-out" :class="[
-          activeTab === 'add'
-            ? 'bg-green-500 text-white'
-            : 'bg-gray-100 hover:bg-gray-200'
-        ]" @click="switchTab('add')">
+        <button
+          class="px-5 py-2.5 rounded-t-lg text-sm transition-all duration-300 ease-in-out"
+          :class="[
+            activeTab === 'add'
+              ? 'bg-green-500 text-white'
+              : 'bg-gray-100 hover:bg-gray-200',
+          ]"
+          @click="switchTab('add')"
+        >
           添加任务
         </button>
       </div>
@@ -214,48 +237,83 @@ async function handleAddTask() {
       <!-- 任务列表 -->
       <div v-show="activeTab === 'list'" class="flex-1 overflow-y-auto p-5">
         <div class="flex flex-col gap-4">
-          <div v-for="task in tasks" :key="task.id" class="bg-white rounded-lg p-4 shadow-sm" :class="[
-            `border-l-4`,
-            task.priority === 'high' ? 'border-l-red-500' : '',
-            task.priority === 'medium' ? 'border-l-orange-500' : '',
-            task.priority === 'low' ? 'border-l-green-500' : '',
-            task.status === 'completed' ? 'opacity-70' : '',
-            getDueStatus(task) === 'overdue' ? 'border border-red-200' : '',
-            getDueStatus(task) === 'upcoming' ? 'border border-orange-200' : ''
-          ]">
+          <div
+            v-for="task in tasks"
+            :key="task.id"
+            class="bg-white rounded-lg p-4 shadow-sm"
+            :class="[
+              `border-l-4`,
+              task.priority === 'high' ? 'border-l-red-500' : '',
+              task.priority === 'medium' ? 'border-l-orange-500' : '',
+              task.priority === 'low' ? 'border-l-green-500' : '',
+              task.status === 'completed' ? 'opacity-70' : '',
+              getDueStatus(task) === 'overdue' ? 'border border-red-200' : '',
+              getDueStatus(task) === 'upcoming'
+                ? 'border border-orange-200'
+                : '',
+            ]"
+          >
             <!-- 任务头部 -->
             <div class="flex justify-between items-start gap-5">
               <div class="flex items-center gap-2.5 flex-1">
                 <h4 :class="{ 'line-through': task.status === 'completed' }">
                   {{ task.title }}
                 </h4>
-                <div v-if="task.dueDate" class="text-xs px-2 py-0.5 rounded-full" :class="[
-                  getDueStatus(task) === 'overdue' ? 'bg-red-50 text-red-700' : '',
-                  getDueStatus(task) === 'upcoming' ? 'bg-orange-50 text-orange-700' : '',
-                  getDueStatus(task) === 'normal' ? 'bg-gray-100 text-gray-600' : ''
-                ]">
+                <div
+                  v-if="task.dueDate"
+                  class="text-xs px-2 py-0.5 rounded-full"
+                  :class="[
+                    getDueStatus(task) === 'overdue'
+                      ? 'bg-red-50 text-red-700'
+                      : '',
+                    getDueStatus(task) === 'upcoming'
+                      ? 'bg-orange-50 text-orange-700'
+                      : '',
+                    getDueStatus(task) === 'normal'
+                      ? 'bg-gray-100 text-gray-600'
+                      : '',
+                  ]"
+                >
                   {{ formatDate(task.dueDate) }}
                 </div>
               </div>
 
               <!-- 任务操作 -->
               <div class="flex items-center gap-2">
-                <select :value="task.status"
-                  @change="updateTaskStatus(task, ($event.target as HTMLSelectElement)?.value as Task['status'])"
-                  class="px-2 py-1 rounded border border-gray-200 text-sm">
+                <select
+                  :value="task.status"
+                  @change="
+                    updateTaskStatus(
+                      task,
+                      ($event.target as HTMLSelectElement)
+                        ?.value as Task['status']
+                    )
+                  "
+                  class="px-2 py-1 rounded border border-gray-200 text-sm"
+                >
                   <option value="pending">待处理</option>
                   <option value="in-progress">进行中</option>
                   <option value="completed">已完成</option>
                 </select>
-                <select :value="task.priority"
-                  @change="updateTaskPriority(task, ($event.target as HTMLSelectElement).value as Task['priority'])"
-                  class="px-2 py-1 rounded border border-gray-200 text-sm">
+                <select
+                  :value="task.priority"
+                  @change="
+                    updateTaskPriority(
+                      task,
+                      ($event.target as HTMLSelectElement)
+                        .value as Task['priority']
+                    )
+                  "
+                  class="px-2 py-1 rounded border border-gray-200 text-sm"
+                >
                   <option value="low">低优先级</option>
                   <option value="medium">中优先级</option>
                   <option value="high">高优先级</option>
                 </select>
-                <button @click="deleteTask(task.id!)"
-                  class="px-2 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600">
+                <button
+                  @click="deleteTask(task.id!)"
+                  class="px-2 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                >
                   删除
                 </button>
               </div>
@@ -278,18 +336,27 @@ async function handleAddTask() {
           <div class="space-y-5">
             <div class="flex flex-col gap-2">
               <label class="font-medium">任务标题</label>
-              <input v-model="newTask.title" type="text" placeholder="请输入任务标题"
-                class="w-full px-2 py-2 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+              <input
+                v-model="newTask.title"
+                type="text"
+                placeholder="请输入任务标题"
+                class="w-full px-2 py-2 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
             </div>
             <div class="flex flex-col gap-2">
               <label class="font-medium">任务描述</label>
-              <textarea v-model="newTask.description" placeholder="请输入任务描述"
-                class="w-full px-2 py-2 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+              <textarea
+                v-model="newTask.description"
+                placeholder="请输入任务描述"
+                class="w-full px-2 py-2 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              ></textarea>
             </div>
             <div class="flex flex-col gap-2">
               <label class="font-medium">优先级</label>
-              <select v-model="newTask.priority"
-                class="w-full px-2 py-2 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+              <select
+                v-model="newTask.priority"
+                class="w-full px-2 py-2 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
                 <option value="low">低优先级</option>
                 <option value="medium">中优先级</option>
                 <option value="high">高优先级</option>
@@ -297,22 +364,33 @@ async function handleAddTask() {
             </div>
             <div class="flex flex-col gap-2">
               <label class="font-medium">截止时间</label>
-              <input v-model="newTask.dueDate" type="datetime-local"
-                class="w-full px-2 py-2 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+              <input
+                v-model="newTask.dueDate"
+                type="datetime-local"
+                class="w-full px-2 py-2 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
             </div>
-            <button @click="handleAddTask" :disabled="!isFormValid"
-              class="w-full py-3 rounded text-base transition-colors duration-300" :class="[
+            <button
+              @click="handleAddTask"
+              :disabled="!isFormValid"
+              class="w-full py-3 rounded text-base transition-colors duration-300"
+              :class="[
                 isFormValid
                   ? 'bg-green-500 text-white hover:bg-green-600'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              ]">
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed',
+              ]"
+            >
               添加任务
             </button>
           </div>
         </div>
       </div>
     </div>
-    <Toast message="任务标题已存在，请使用不同的标题" type="warning" v-model="showToast" />
+    <Toast
+      message="任务标题已存在，请使用不同的标题"
+      type="warning"
+      v-model="showToast"
+    />
   </SubWindowLayout>
 </template>
 

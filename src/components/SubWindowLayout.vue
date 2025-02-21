@@ -6,10 +6,6 @@ defineProps<{
 
 <template>
   <div class="sub-window-layout">
-    <!-- <header class="window-header">
-      <h1>{{ title }}</h1>
-    </header> -->
-
     <main class="content">
       <slot></slot>
     </main>
