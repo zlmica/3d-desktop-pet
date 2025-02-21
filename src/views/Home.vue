@@ -82,7 +82,7 @@ onUnmounted(() => {
     </div>
     <TresCanvas v-bind="gl">
       <TresPerspectiveCamera :position="[0, 0, 4]" />
-      <OrbitControls :enable-zoom="false" :enable-pan="false" />alwaysOnTop
+      <OrbitControls :enable-zoom="false" :enable-pan="false" />
       <Suspense>
         <TresMesh @click="handleClick">
           <UgglyBunny ref="bunnyRef" />
