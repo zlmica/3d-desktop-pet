@@ -26,5 +26,6 @@ dist-ssr
 .specstory/*
 bak/*
 release/*
+dist-electron/*
 
 

@@ -2,8 +2,7 @@
 
 一个基于 Electron + Vue 3 开发的桌面宠物应用,具有任务管理和提醒功能。
 
-![预览图](./public/preview1.png)
-![预览图](./public/preview2.png)
+<img src="./public/preview1.png" width="49%" style="display: inline-block"> <img src="./public/preview2.png" width="49%" style="display: inline-block">
 
 ## ✨ 功能特性
 
