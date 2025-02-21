@@ -20,7 +20,7 @@ onUnmounted(() => {
       <div
         v-for="reminder in reminderQueue"
         :key="reminder.id"
-        class="relative bg-white rounded-2xl shadow-lg p-4 w-[180px] animate-slide-in before:content-[''] before:absolute before:bottom-[-8px] before:left-[30px] before:w-4 before:h-4 before:bg-white before:transform before:rotate-45 before:shadow-lg"
+        class="relative bg-white rounded-2xl p-4 w-[180px] border border-gray-100 animate-slide-in before:content-[''] before:absolute before:bottom-[-8px] before:left-[30px] before:w-4 before:h-4 before:bg-white before:transform before:rotate-45"
       >
         <div class="flex justify-between items-start mb-2">
           <h3 class="font-medium select-none">{{ reminder.title }}</h3>

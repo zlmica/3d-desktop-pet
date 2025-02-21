@@ -1,32 +1,32 @@
-import { app, BrowserWindow, screen, ipcMain } from "electron";
-import { createRequire } from "node:module";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
+import { app, BrowserWindow, screen, ipcMain } from 'electron'
+import { createRequire } from 'node:module'
+import { fileURLToPath } from 'node:url'
+import path from 'node:path'
 
-createRequire(import.meta.url);
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+createRequire(import.meta.url)
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-process.env.APP_ROOT = path.join(__dirname, "..");
+process.env.APP_ROOT = path.join(__dirname, '..')
 
-export const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
-export const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
-export const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
+export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
+export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
+export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
-  ? path.join(process.env.APP_ROOT, "public")
-  : RENDERER_DIST;
+  ? path.join(process.env.APP_ROOT, 'public')
+  : RENDERER_DIST
 
-let win: BrowserWindow | null;
+let win: BrowserWindow | null
 
 function createWindow() {
-  const primaryDisplay = screen.getPrimaryDisplay();
+  const primaryDisplay = screen.getPrimaryDisplay()
   const { width: screenWidth, height: screenHeight } =
-    primaryDisplay.workAreaSize;
+    primaryDisplay.workAreaSize
 
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, "rabbit.png"),
+    icon: path.join(process.env.VITE_PUBLIC, 'rabbit.png'),
     webPreferences: {
-      preload: path.join(__dirname, "preload.mjs"),
+      preload: path.join(__dirname, 'preload.mjs'),
     },
     width: 180,
     height: 200,
@@ -38,29 +38,30 @@ function createWindow() {
     alwaysOnTop: true,
     resizable: false,
     hasShadow: false,
-  });
+  })
 
   // Test active push message to Renderer-process.
-  win.webContents.on("did-finish-load", () => {
-    win?.webContents.send("main-process-message", new Date().toLocaleString());
-  });
+  win.webContents.on('did-finish-load', () => {
+    win?.webContents.send('main-process-message', new Date().toLocaleString())
+  })
 
   if (VITE_DEV_SERVER_URL) {
-    win.loadURL(VITE_DEV_SERVER_URL);
+    win.loadURL(VITE_DEV_SERVER_URL)
   } else {
-    win.loadFile(path.join(RENDERER_DIST, "index.html"));
+    win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
 
   // 添加以下代码以确保窗口完全透明
-  win.setBackgroundColor("#00000000");
+  win.setBackgroundColor('#00000000')
 
   win.setVisibleOnAllWorkspaces(true, {
     visibleOnFullScreen: true,
-  });
+  })
+
   // win.webContents.openDevTools();
 }
 
-const subWindows = new Map<string, BrowserWindow>();
+const subWindows = new Map<string, BrowserWindow>()
 
 // 创建子窗口
 function createSubWindow(windowId: string, title: string) {
@@ -68,10 +69,10 @@ function createSubWindow(windowId: string, title: string) {
   if (subWindows.has(windowId)) {
     // 如果存在，但是被小化了，要恢复
     if (subWindows.get(windowId)?.isMinimized()) {
-      subWindows.get(windowId)?.restore();
+      subWindows.get(windowId)?.restore()
     }
-    subWindows.get(windowId)?.focus();
-    return;
+    subWindows.get(windowId)?.focus()
+    return
   }
 
   const subWindow = new BrowserWindow({
@@ -82,61 +83,65 @@ function createSubWindow(windowId: string, title: string) {
     title: title,
     show: false,
     webPreferences: {
-      preload: path.join(__dirname, "preload.mjs"),
+      preload: path.join(__dirname, 'preload.mjs'),
     },
-  });
+  })
 
   if (VITE_DEV_SERVER_URL) {
-    subWindow.loadURL(VITE_DEV_SERVER_URL + "/#" + windowId);
+    subWindow.loadURL(VITE_DEV_SERVER_URL + '/#' + windowId)
   } else {
     // win.loadFile('dist/index.html')
-    subWindow.loadFile(path.join(RENDERER_DIST, "index.html"), {
+    subWindow.loadFile(path.join(RENDERER_DIST, 'index.html'), {
       hash: windowId,
-    });
+    })
   }
 
   // 窗口准备好后显示
-  subWindow.once("ready-to-show", () => {
-    subWindow.show();
-    subWindow.focus();
-  });
+  subWindow.once('ready-to-show', () => {
+    subWindow.show()
+    subWindow.focus()
+  })
 
   // 窗口关闭时从Map中删除
-  subWindow.on("closed", () => {
-    subWindows.delete(windowId);
-  });
+  subWindow.on('closed', () => {
+    subWindows.delete(windowId)
+  })
 
-  subWindows.set(windowId, subWindow);
+  subWindows.set(windowId, subWindow)
   // 在页面加载完成后设置标题
-  subWindow.webContents.on("did-finish-load", () => {
-    subWindow.setTitle(title);
-  });
+  subWindow.webContents.on('did-finish-load', () => {
+    subWindow.setTitle(title)
+  })
 
   // 在页面DOM更新后也设置标题
-  subWindow.webContents.on("dom-ready", () => {
-    subWindow.setTitle(title);
-  });
+  subWindow.webContents.on('dom-ready', () => {
+    subWindow.setTitle(title)
+  })
 
   // 打开调试
   // subWindow.webContents.openDevTools();
 }
 
-let reminderWindow: BrowserWindow | null = null;
+let reminderWindow: BrowserWindow | null = null
 
 function createReminderWindow() {
-  const primaryDisplay = screen.getPrimaryDisplay();
+  const primaryDisplay = screen.getPrimaryDisplay()
   const { width: screenWidth, height: screenHeight } =
-    primaryDisplay.workAreaSize;
+    primaryDisplay.workAreaSize
 
-  const mainWindowBounds = win?.getBounds();
+  // 获取实时的主窗口位置
+  const mainWindowBounds = win?.getBounds() || {
+    x: screenWidth - 200,
+    y: screenHeight - 150,
+  }
 
   reminderWindow = new BrowserWindow({
     width: 180,
     height: 150,
-    x: mainWindowBounds?.x || screenWidth - 200,
-    y: (mainWindowBounds?.y || screenHeight - 150) - 150, // 在主窗口上方150像素
+    x: mainWindowBounds.x,
+    y: mainWindowBounds.y - 150, // 在主窗口上方150像素
     webPreferences: {
-      preload: path.join(__dirname, "preload.mjs"),
+      preload: path.join(__dirname, 'preload.mjs'),
     },
     autoHideMenuBar: true,
     transparent: true,
@@ -145,75 +150,67 @@ function createReminderWindow() {
     resizable: false,
     hasShadow: false,
     show: false, // 初始时不显示窗口
-  });
+  })
 
   // 添加以下代码以确保窗口完全透明
-  reminderWindow.setBackgroundColor("#00000000");
+  reminderWindow.setBackgroundColor('#00000000')
 
   if (VITE_DEV_SERVER_URL) {
-    reminderWindow.loadURL(VITE_DEV_SERVER_URL + "/#/reminder-popup");
+    reminderWindow.loadURL(VITE_DEV_SERVER_URL + '/#/reminder-popup')
   } else {
-    reminderWindow.loadFile(path.join(RENDERER_DIST, "index.html"), {
-      hash: "reminder-popup",
-    });
+    reminderWindow.loadFile(path.join(RENDERER_DIST, 'index.html'), {
+      hash: 'reminder-popup',
+    })
   }
 
-  // 监听主窗口移动事件
-  win?.on("move", () => {
-    if (reminderWindow && win) {
-      const bounds = win.getBounds();
-      reminderWindow.setPosition(bounds.x, bounds.y - 150);
-    }
-  });
-
   // 添加 IPC 监听器来控制窗口显示状态
-  ipcMain.on("show-reminder-window", () => {
+  ipcMain.on('show-reminder-window', () => {
     // 如果窗口已经显示，则不处理
     if (reminderWindow?.isVisible()) {
-      return;
+      return
     }
-    reminderWindow?.show();
+    reminderWindow?.show()
     // 显示窗口后，发送数据到提醒窗口
-    reminderWindow?.webContents.send("update-reminders");
-  });
+    reminderWindow?.webContents.send('update-reminders')
+  })
 
-  ipcMain.on("hide-reminder-window", () => {
-    reminderWindow?.hide();
-  });
+  ipcMain.on('hide-reminder-window', () => {
+    reminderWindow?.hide()
+  })
   // reminderWindow?.webContents.openDevTools();
 }
 
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit()
     subWindows.forEach((window) => {
-      window.close();
-    });
-    win = null;
-    reminderWindow = null;
+      window.close()
+    })
+    win = null
+    reminderWindow = null
   }
-});
+})
 
-app.on("activate", () => {
+app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
+    createWindow()
   }
-});
+})
 
 app.whenReady().then(() => {
-  createReminderWindow();
-  createWindow();
+  createReminderWindow()
+  createWindow()
 
-  ipcMain.on("exit-app", () => {
-    app.quit();
+  ipcMain.on('exit-app', () => {
+    app.quit()
     subWindows.forEach((window) => {
-      window.close();
-    });
-    win = null;
-    reminderWindow = null;
-  });
+      window.close()
+    })
+    win = null
+    reminderWindow = null
+  })
 
-  ipcMain.on("open-sub-window", (_event, { windowId, title }) => {
-    createSubWindow(windowId, title);
-  });
-});
+  ipcMain.on('open-sub-window', (_event, { windowId, title }) => {
+    createSubWindow(windowId, title)
+  })
+})
