@@ -19,6 +19,11 @@ const routes = [
     component: () => import('../views/ReminderView.vue'),
   },
   {
+    path: '/pet',
+    name: 'Pet',
+    component: () => import('../views/PetView.vue'),
+  },
+  {
     path: '/reminder-popup',
     name: 'reminder-popup',
     component: ReminderPopup,

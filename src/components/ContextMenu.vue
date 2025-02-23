@@ -18,6 +18,11 @@ const menuItems = computed(() => [
     label: props.isResting ? '宠物运动' : '宠物休息',
     icon: props.isResting ? '🏃' : '💤',
   },
+  {
+    id: 'pet',
+    label: '宠物管理',
+    icon: '🐶',
+  },
   { id: 'exit', label: '退出应用', icon: '👋' },
 ])
 
@@ -41,6 +46,12 @@ const handleMenuClick = (menuId) => {
       emit('exercise', !props.isResting ? 'sleep' : 'play')
       break
     }
+    case 'pet':
+      ipcRenderer.send('open-sub-window', {
+        windowId: 'pet',
+        title: '宠物管理',
+      })
+      break
     case 'exit':
       ipcRenderer.send('exit-app')
       break
@@ -50,51 +61,14 @@ const handleMenuClick = (menuId) => {
 </script>
 
 <template>
-  <div
-    class="context-menu"
-    :style="{
-      right: `2px`,
-      top: `34px`,
-    }"
-  >
+  <div class="fixed z-[1000] right-0.5 top-8">
     <div
       v-for="item in menuItems"
       :key="item.id"
       @click="handleMenuClick(item.id)"
-      class="menu-item"
+      class="flex items-center justify-center cursor-pointer mt-2 w-6 h-6 rounded-full bg-[#ffffff60] text-[12px] transition-colors duration-200 hover:bg-[#ffffff]"
     >
       <span>{{ item.icon }}</span>
     </div>
   </div>
 </template>
-
-<style scoped>
-.context-menu {
-  position: fixed;
-  z-index: 1000;
-  max-height: 150px;
-  overflow-y: auto;
-}
-
-.menu-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  margin-top: 10px;
-  width: 24px;
-  height: 24px;
-  background-color: rgba(255, 255, 255, 0.6);
-  border-radius: 50%;
-  font-size: 12px;
-  transition: background-color 0.2s;
-}
-
-.menu-item:hover {
-  background-color: rgba(255, 255, 255, 1);
-}
-
-.label {
-  font-size: 24px;
-}
-</style>
