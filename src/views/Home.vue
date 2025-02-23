@@ -48,7 +48,7 @@ const isResting = ref(false)
 
 const handleExercise = (status) => {
   isResting.value = status === 'sleep'
-  bunnyRef.value[status]()
+  bunnyRef.value.playPause()
 }
 // 灯光设置 默认
 const light = ref({

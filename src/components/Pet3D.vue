@@ -6,14 +6,14 @@ import modelUrl from '/rabbit.glb?url'
 
 const isPlaying = ref(false)
 
-const play = async () => {
-  currentAction2.value.play()
-  isPlaying.value = true
-}
-
-const sleep = () => {
-  currentAction2.value.stop()
-  isPlaying.value = false
+const playPause = () => {
+  if (isPlaying.value) {
+    currentAction2.value.stop()
+    isPlaying.value = false
+  } else {
+    currentAction2.value.play()
+    isPlaying.value = true
+  }
 }
 
 const hello = () => {
@@ -34,8 +34,7 @@ const hello = () => {
 }
 
 defineExpose({
-  play,
-  sleep,
+  playPause,
   hello,
 })
 
@@ -45,7 +44,7 @@ const { actions } = useAnimations(animations, model)
 
 const currentAction = ref(actions.Hello)
 const currentAction2 = ref(actions.Play)
-play()
+playPause()
 </script>
 
 <template>

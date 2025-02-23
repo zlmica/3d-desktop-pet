@@ -58,7 +58,7 @@ function createWindow() {
     visibleOnFullScreen: true,
   })
 
-  // win.webContents.openDevTools();
+  // win.webContents.openDevTools({ mode: 'detach' })
 }
 
 const subWindows = new Map<string, BrowserWindow>()
