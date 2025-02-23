@@ -1,16 +1,16 @@
 <script setup>
-import { TresCanvas } from '@tresjs/core'
-import { BasicShadowMap, SRGBColorSpace, NoToneMapping } from 'three'
 import { OrbitControls } from '@tresjs/cientos'
-import UgglyBunny from '../components/Pet3D.vue'
+import { TresCanvas } from '@tresjs/core'
+import { BasicShadowMap, NoToneMapping, SRGBColorSpace } from 'three'
+import { onMounted, onUnmounted, ref } from 'vue'
 import ButtonIcon from '../components/ButtonIcon.vue'
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
 import ContextMenu from '../components/ContextMenu.vue'
-
+import Pet from '../components/Pet3D.vue'
+import { useModel } from '../composable/useModel'
 import { useReminder } from '../composable/useReminder'
-import { watch } from 'vue'
+
 const { checkReminders } = useReminder()
+const { clickActionPlayMessage } = useModel()
 
 const showContextMenu = ref(false)
 const handleContextMenu = (event) => {
@@ -34,22 +34,16 @@ const gl = {
   windowSize: true,
 }
 
-const bunnyRef = ref(null)
+const petRef = ref(null)
 
 const handleClick = () => {
   if (showContextMenu.value) {
     showContextMenu.value = false
   } else {
-    bunnyRef.value.hello()
+    clickActionPlayMessage()
   }
 }
 
-const isResting = ref(false)
-
-const handleExercise = (status) => {
-  isResting.value = status === 'sleep'
-  bunnyRef.value.playPause()
-}
 // 灯光设置 默认
 const light = ref({
   color: '#fff',
@@ -85,7 +79,7 @@ onUnmounted(() => {
       <OrbitControls :enable-zoom="false" :enable-pan="false" />
       <Suspense>
         <TresMesh @click="handleClick">
-          <UgglyBunny ref="bunnyRef" />
+          <Pet />
         </TresMesh>
       </Suspense>
       <TresDirectionalLight v-bind="light" />
@@ -93,13 +87,7 @@ onUnmounted(() => {
     </TresCanvas>
 
     <!-- 添加右键菜单组件 -->
-    <ContextMenu
-      v-if="showContextMenu"
-      :isResting="isResting"
-      @exercise="handleExercise"
-      @close="closeContextMenu"
-    />
-    <!-- <ReminderManager /> -->
+    <ContextMenu v-if="showContextMenu" @close="closeContextMenu" />
   </div>
 </template>
 
