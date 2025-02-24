@@ -6,11 +6,11 @@ const emit = defineEmits(['close'])
 const menuItems = computed(() => [
   { id: 'task', label: '添加任务', icon: '🔖' },
   { id: 'reminder', label: '添加提醒', icon: '⏰' },
-  {
-    id: 'pet',
-    label: '宠物管理',
-    icon: '🐶',
-  },
+  // {
+  //   id: 'pet',
+  //   label: '宠物管理',
+  //   icon: '🐶',
+  // },
   { id: 'exit', label: '退出应用', icon: '👋' },
 ])
 
