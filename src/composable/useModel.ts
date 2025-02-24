@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 
 // 模型url
-const url = ref('/public/rabbit.glb?url')
+const url = ref('rabbit.glb')
 
 // 循环动画
 const loopAction = ref({

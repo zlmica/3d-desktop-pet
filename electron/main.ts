@@ -2,6 +2,7 @@ import { app, BrowserWindow, screen, ipcMain } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import { createTray, destroyTray } from './tray'
 
 createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -182,6 +183,7 @@ function createReminderWindow() {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
+    destroyTray()
     app.quit()
     subWindows.forEach((window) => {
       window.close()
@@ -200,8 +202,18 @@ app.on('activate', () => {
 app.whenReady().then(() => {
   createReminderWindow()
   createWindow()
+  createTray(() => {
+    destroyTray()
+    app.quit()
+    subWindows.forEach((window) => {
+      window.close()
+    })
+    win = null
+    reminderWindow = null
+  })
 
   ipcMain.on('exit-app', () => {
+    destroyTray()
     app.quit()
     subWindows.forEach((window) => {
       window.close()

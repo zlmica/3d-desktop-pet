@@ -26,11 +26,20 @@ watch(
   { deep: true }
 )
 
-const modelUrl = new URL(url.value, import.meta.url).href
-
 const isPlaying = ref(false)
 
-const { scene: model, animations } = await useGLTF(modelUrl)
+const modelUrl = ref('')
+
+// 使用动态导入，但需要指定 glob 导入模式
+const modules = import.meta.glob('/public/*.glb', {
+  eager: true,
+  import: 'default',
+})
+
+// 根据 url 获取对应的模型路径
+modelUrl.value = modules[`/public/${url.value}`] as string
+
+const { scene: model, animations } = await useGLTF(modelUrl.value)
 
 const { actions } = useAnimations(animations, model)
 
