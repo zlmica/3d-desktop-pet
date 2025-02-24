@@ -1,16 +1,19 @@
 <script setup>
 import { computed } from 'vue'
+import { useModel } from '../composable/useModel'
+
+const { loopAction } = useModel()
 
 const emit = defineEmits(['close'])
 
 const menuItems = computed(() => [
   { id: 'task', label: '添加任务', icon: '🔖' },
   { id: 'reminder', label: '添加提醒', icon: '⏰' },
-  // {
-  //   id: 'pet',
-  //   label: '宠物管理',
-  //   icon: '🐶',
-  // },
+  {
+    id: 'pet',
+    label: '宠物管理',
+    icon: '🐶',
+  },
   { id: 'exit', label: '退出应用', icon: '👋' },
 ])
 
@@ -31,10 +34,15 @@ const handleMenuClick = (menuId) => {
       })
       break
     case 'pet':
-      ipcRenderer.send('open-sub-window', {
-        windowId: 'pet',
-        title: '宠物管理',
-      })
+      // ipcRenderer.send('open-sub-window', {
+      //   windowId: 'pet',
+      //   title: '宠物管理',
+      // })
+      if (loopAction.value.isLoop) {
+        loopAction.value.isLoop = false
+      } else {
+        loopAction.value.isLoop = true
+      }
       break
     case 'exit':
       ipcRenderer.send('exit-app')

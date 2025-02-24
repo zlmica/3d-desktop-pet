@@ -12,6 +12,20 @@ watch(clickActionPlay, () => {
   }
 })
 
+watch(
+  loopAction,
+  () => {
+    if (loopAction.value.isLoop) {
+      currentLoopAction.value.play()
+      isPlaying.value = true
+    } else {
+      currentLoopAction.value.stop()
+      isPlaying.value = false
+    }
+  },
+  { deep: true }
+)
+
 const modelUrl = new URL(url.value, import.meta.url).href
 
 const isPlaying = ref(false)
