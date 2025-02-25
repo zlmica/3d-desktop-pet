@@ -45,7 +45,8 @@ const handleMenuClick = (menuId) => {
       }
       break
     case 'exit':
-      ipcRenderer.send('exit-app')
+      // ipcRenderer.send('exit-app')
+      ipcRenderer.send('minimize-main-window')
       break
   }
   emit('close')

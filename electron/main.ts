@@ -165,11 +165,16 @@ function createReminderWindow() {
   }
 
   // 添加 IPC 监听器来控制窗口显示状态
-  ipcMain.on('show-reminder-window', () => {
+  ipcMain.on('show-reminder-window', async () => {
     // 如果窗口已经显示，则不处理
     if (reminderWindow?.isVisible()) {
       return
     }
+    // 如果主窗口被最小化
+    if (win !== null && win !== undefined) {
+      win.restore()
+    }
+    await new Promise((resolve) => setTimeout(resolve, 200))
     reminderWindow?.show()
     // 显示窗口后，发送数据到提醒窗口
     reminderWindow?.webContents.send('update-reminders')
@@ -220,6 +225,13 @@ app.whenReady().then(() => {
     })
     win = null
     reminderWindow = null
+  })
+
+  // 主窗口最小化
+  ipcMain.on('minimize-main-window', () => {
+    if (win !== null && win !== undefined) {
+      win.minimize()
+    }
   })
 
   ipcMain.on('open-sub-window', (_event, { windowId, title }) => {

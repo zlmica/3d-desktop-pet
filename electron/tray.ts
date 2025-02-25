@@ -23,6 +23,11 @@ export function createTray(callback: () => void) {
         })
       },
     },
+    // 版本号
+    {
+      label: `版本号: v${app.getVersion()}`,
+      enabled: false,
+    },
     { type: 'separator' },
     {
       label: '退出',
