@@ -8,5 +8,5 @@ createApp(App)
   .mount('#app')
   .$nextTick(() => {
     // Use contextBridge
-    window.ipcRenderer.on('main-process-message', (_event, message) => {})
+    window.ipcRenderer.on('main-process-message', (_event, _) => {})
   })
