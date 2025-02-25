@@ -32,7 +32,7 @@ function createWindow() {
     width: 180,
     height: 200,
     x: screenWidth - 200, // 设置窗口x坐标
-    y: screenHeight - 150, // 设置窗口y坐标
+    y: screenHeight - 220, // 设置窗口y坐标
     autoHideMenuBar: true,
     transparent: true,
     frame: false,
@@ -140,7 +140,7 @@ function createReminderWindow() {
     width: 180,
     height: 150,
     x: mainWindowBounds.x,
-    y: mainWindowBounds.y - 150, // 在主窗口上方150像素
+    y: mainWindowBounds.y - 210, // 在主窗口上方150像素
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
     },
