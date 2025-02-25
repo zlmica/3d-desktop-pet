@@ -6,6 +6,7 @@ import { useTres } from '../composable/useTres'
 interface ModelInfo {
   name: string
   path: string
+  isSystem: boolean // 添加标识是否为系统模型的字段
 }
 
 const {
@@ -149,6 +150,11 @@ const handleFileUpload = async (event: Event) => {
     modelList.value = models
   } catch (error) {
     console.error('上传失败:', error)
+  } finally {
+    // 清空文件输入框，允许重复上传相同文件
+    if (fileInput.value) {
+      fileInput.value.value = ''
+    }
   }
 }
 
@@ -159,6 +165,12 @@ const selectModel = async (event: Event) => {
   )
   if (!selectedModel) return
 
+  // 清空当前动作列表
+  availableAnimations.value = []
+  selectedLoopAnimation.value = ''
+  selectedClickAnimation.value = ''
+
+  // 更新模型
   updateModel(selectedModel.path)
 }
 
@@ -172,18 +184,29 @@ const availableAnimations = ref<string[]>([])
 
 const updateActions = (_: unknown, actions: string[]) => {
   availableAnimations.value = actions
-  if (
-    loopAction.value &&
-    availableAnimations.value.includes(loopAction.value.action)
-  ) {
-    selectedLoopAnimation.value = loopAction.value.action
-  }
-  if (
-    clickAction.value &&
-    availableAnimations.value.includes(clickAction.value.action)
-  ) {
-    selectedClickAnimation.value = clickAction.value.action
-  }
+
+  // 延迟设置动作，确保模型加载完成
+  nextTick(() => {
+    if (
+      loopAction.value &&
+      availableAnimations.value.includes(loopAction.value.action)
+    ) {
+      selectedLoopAnimation.value = loopAction.value.action
+    } else {
+      selectedLoopAnimation.value = ''
+      loopAction.value.isLoop = false
+    }
+
+    if (
+      clickAction.value &&
+      availableAnimations.value.includes(clickAction.value.action)
+    ) {
+      selectedClickAnimation.value = clickAction.value.action
+    } else {
+      selectedClickAnimation.value = ''
+      clickAction.value.isEnable = false
+    }
+  })
 }
 
 const handleSetLoopAnimation = () => {

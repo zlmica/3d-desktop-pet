@@ -3,8 +3,13 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { createTray, destroyTray } from './tray'
-import fs from 'fs/promises'
 import Store from 'electron-store'
+import {
+  deleteUserModel,
+  ensureDirectories,
+  getAllModels,
+  saveUserModel,
+} from './file'
 
 const store = new Store()
 createRequire(import.meta.url)
@@ -215,7 +220,10 @@ app.on('activate', () => {
   }
 })
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // 确保目录存在
+  await ensureDirectories()
+
   createReminderWindow()
   createWindow()
   createTray(() => {
@@ -249,28 +257,41 @@ app.whenReady().then(() => {
     createSubWindow(windowId, title)
   })
 
+  // 获取模型列表
   ipcMain.handle('get-model-list', async () => {
-    const modelsDir = path.join(process.env.VITE_PUBLIC)
-
-    try {
-      await fs.access(modelsDir)
-    } catch {
-      await fs.mkdir(modelsDir, { recursive: true })
-    }
-
-    const files = await fs.readdir(modelsDir)
-    return files
-      .filter((file) => file.endsWith('.glb'))
-      .map((file) => ({
-        name: path.parse(file).name,
-        path: `${file}`,
-      }))
+    return await getAllModels()
   })
 
+  // 上传模型
   ipcMain.handle('upload-model', async (_, { name, path: filePath }) => {
-    const targetPath = path.join(process.env.VITE_PUBLIC, name)
-    await fs.copyFile(filePath, targetPath)
-    return { success: true }
+    try {
+      await saveUserModel(filePath, name)
+      return { success: true }
+    } catch (error) {
+      console.error('上传模型失败:', error)
+      return { success: false, error: error }
+    }
+  })
+
+  // 删除模型
+  ipcMain.handle('delete-model', async (_, fileName) => {
+    try {
+      await deleteUserModel(fileName)
+      return { success: true }
+    } catch (error) {
+      console.error('删除模型失败:', error)
+      return { success: false, error: error }
+    }
+  })
+
+  ipcMain.on('update-model-url', (_event, newUrl) => {
+    win?.webContents.send('model-url-changed', newUrl)
+    // 广播给所有窗口
+    BrowserWindow.getAllWindows().forEach((window) => {
+      if (!window.isDestroyed()) {
+        window.webContents.send('model-url-changed', newUrl)
+      }
+    })
   })
 
   ipcMain.handle('save-settings', (_, settings) => {
@@ -284,16 +305,6 @@ app.whenReady().then(() => {
   // 清空配置
   ipcMain.handle('clear-settings', () => {
     store.clear()
-  })
-
-  ipcMain.on('update-model-url', (_event, newUrl) => {
-    win?.webContents.send('model-url-changed', newUrl)
-    // 广播给所有窗口
-    BrowserWindow.getAllWindows().forEach((window) => {
-      if (!window.isDestroyed()) {
-        window.webContents.send('model-url-changed', newUrl)
-      }
-    })
   })
 
   ipcMain.on('update-scene-settings', (_event, settings) => {

@@ -32,14 +32,10 @@ const isPlaying = ref(false)
 
 const modelUrl = ref('')
 
-// 使用动态导入，但需要指定 glob 导入模式
-const modules = import.meta.glob('/public/*.glb', {
-  eager: true,
-  import: 'default',
-})
-
 // 根据 url 获取对应的模型路径
-modelUrl.value = modules[`/public/${url.value}`] as string
+modelUrl.value = import.meta.env.DEV
+  ? `/public/${url.value}` // 开发环境
+  : url.value // 生产环境
 
 const { scene: model, animations } = await useGLTF(modelUrl.value)
 
