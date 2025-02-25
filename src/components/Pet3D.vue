@@ -6,6 +6,8 @@ import { useModel } from '../composable/useModel'
 
 const { url, loopAction, clickAction, clickActionPlay } = useModel()
 
+const emit = defineEmits(['update:actions'])
+
 watch(clickActionPlay, () => {
   if (clickActionPlay.value) {
     hello()
@@ -42,6 +44,9 @@ modelUrl.value = modules[`/public/${url.value}`] as string
 const { scene: model, animations } = await useGLTF(modelUrl.value)
 
 const { actions } = useAnimations(animations, model)
+
+// 向父组件发送 actions
+emit('update:actions', Object.keys(actions))
 
 // 点击动作
 const currentClickAction = ref<any>(null)

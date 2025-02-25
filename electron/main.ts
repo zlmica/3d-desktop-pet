@@ -3,7 +3,10 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { createTray, destroyTray } from './tray'
+import fs from 'fs/promises'
+import Store from 'electron-store'
 
+const store = new Store()
 createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -59,7 +62,7 @@ function createWindow() {
     visibleOnFullScreen: true,
   })
 
-  // win.webContents.openDevTools({ mode: 'detach' })
+  win.webContents.openDevTools({ mode: 'detach' })
 }
 
 const subWindows = new Map<string, BrowserWindow>()
@@ -103,12 +106,20 @@ function createSubWindow(windowId: string, title: string) {
     subWindow.focus()
   })
 
+  subWindow.on('close', () => {
+    // 通知渲染进程关闭编辑窗口
+    if (windowId === 'pet') {
+      win?.webContents.send('close-edit-window')
+    }
+  })
+
   // 窗口关闭时从Map中删除
   subWindow.on('closed', () => {
     subWindows.delete(windowId)
   })
 
   subWindows.set(windowId, subWindow)
+
   // 在页面加载完成后设置标题
   subWindow.webContents.on('did-finish-load', () => {
     subWindow.setTitle(title)
@@ -120,7 +131,7 @@ function createSubWindow(windowId: string, title: string) {
   })
 
   // 打开调试
-  // subWindow.webContents.openDevTools();
+  // subWindow.webContents.openDevTools({ mode: 'detach' })
 }
 
 let reminderWindow: BrowserWindow | null = null
@@ -236,5 +247,105 @@ app.whenReady().then(() => {
 
   ipcMain.on('open-sub-window', (_event, { windowId, title }) => {
     createSubWindow(windowId, title)
+  })
+
+  ipcMain.handle('get-model-list', async () => {
+    const modelsDir = path.join(process.env.VITE_PUBLIC)
+
+    try {
+      await fs.access(modelsDir)
+    } catch {
+      await fs.mkdir(modelsDir, { recursive: true })
+    }
+
+    const files = await fs.readdir(modelsDir)
+    return files
+      .filter((file) => file.endsWith('.glb'))
+      .map((file) => ({
+        name: path.parse(file).name,
+        path: `${file}`,
+      }))
+  })
+
+  ipcMain.handle('upload-model', async (_, { name, path: filePath }) => {
+    const targetPath = path.join(process.env.VITE_PUBLIC, name)
+    await fs.copyFile(filePath, targetPath)
+    return { success: true }
+  })
+
+  ipcMain.handle('save-settings', (_, settings) => {
+    store.set('settings', settings)
+  })
+
+  ipcMain.handle('get-settings', () => {
+    return store.get('settings')
+  })
+
+  // 清空配置
+  ipcMain.handle('clear-settings', () => {
+    store.clear()
+  })
+
+  ipcMain.on('update-model-url', (_event, newUrl) => {
+    win?.webContents.send('model-url-changed', newUrl)
+    // 广播给所有窗口
+    BrowserWindow.getAllWindows().forEach((window) => {
+      if (!window.isDestroyed()) {
+        window.webContents.send('model-url-changed', newUrl)
+      }
+    })
+  })
+
+  ipcMain.on('update-scene-settings', (_event, settings) => {
+    // 广播给所有窗口
+    BrowserWindow.getAllWindows().forEach((window) => {
+      if (!window.isDestroyed()) {
+        window.webContents.send('scene-settings-changed', settings)
+      }
+    })
+  })
+
+  ipcMain.on('update-model-actions', (_event, actions) => {
+    // 广播给所有窗口
+    BrowserWindow.getAllWindows().forEach((window) => {
+      if (!window.isDestroyed()) {
+        window.webContents.send('model-actions-changed', actions)
+      }
+    })
+  })
+
+  ipcMain.on('update-model-action-loop', (_event, action) => {
+    // 广播给所有窗口
+    BrowserWindow.getAllWindows().forEach((window) => {
+      if (!window.isDestroyed()) {
+        window.webContents.send('model-action-loop-changed', action)
+      }
+    })
+  })
+
+  ipcMain.on('update-model-action-click', (_event, action) => {
+    // 广播给所有窗口
+    BrowserWindow.getAllWindows().forEach((window) => {
+      if (!window.isDestroyed()) {
+        window.webContents.send('model-action-click-changed', action)
+      }
+    })
+  })
+
+  // 重启应用
+  ipcMain.handle('restart-app', () => {
+    if (VITE_DEV_SERVER_URL) {
+      // 开发环境下，只重新加载窗口
+      win?.reload()
+      reminderWindow?.reload()
+      subWindows.forEach((window) => {
+        window.close()
+      })
+    } else {
+      // 生产环境下，重启整个应用
+      app.relaunch()
+      destroyTray()
+      app.quit()
+    }
   })
 })
