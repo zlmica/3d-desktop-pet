@@ -2,6 +2,7 @@
 import { ref, onMounted, nextTick, onUnmounted } from 'vue'
 import { useModel } from '../composable/useModel'
 import { useTres } from '../composable/useTres'
+import { useDebounceFn as debounce } from '@vueuse/core'
 
 interface ModelInfo {
   name: string
@@ -53,18 +54,6 @@ const tempSettings = ref({
     },
   },
 })
-
-// 添加防抖函数
-const debounce = (fn: Function, delay: number) => {
-  let timer: NodeJS.Timeout | null = null
-  return (...args: any[]) => {
-    if (timer) clearTimeout(timer)
-    timer = setTimeout(() => {
-      fn.apply(null, args)
-    }, delay)
-  }
-}
-
 // 将更新函数包装在 nextTick 中
 const updateSettings = () => {
   nextTick(() => {
@@ -122,6 +111,24 @@ onMounted(async () => {
   const models = await window.ipcRenderer.invoke('get-model-list')
   modelList.value = models
   window.ipcRenderer.on('model-actions-changed', updateActions)
+
+  // 根据当前模型URL找到对应的模型
+  if (currentModelUrl.value) {
+    const currentModel = modelList.value.find(
+      (model) => model.path === currentModelUrl.value
+    )
+    if (currentModel) {
+      // 找到select元素并设置其值
+      nextTick(() => {
+        const select = document.querySelector(
+          'select[name="model-select"]'
+        ) as HTMLSelectElement
+        if (select) {
+          select.value = currentModel.name
+        }
+      })
+    }
+  }
 })
 
 onUnmounted(() => {
@@ -299,6 +306,7 @@ const confirmSave = async () => {
           上传模型
         </button>
         <select
+          name="model-select"
           @change="selectModel"
           class="px-4 py-2 border rounded bg-white min-w-[120px]"
         >
