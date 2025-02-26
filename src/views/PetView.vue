@@ -111,24 +111,6 @@ onMounted(async () => {
   const models = await window.ipcRenderer.invoke('get-model-list')
   modelList.value = models
   window.ipcRenderer.on('model-actions-changed', updateActions)
-
-  // 根据当前模型URL找到对应的模型
-  if (currentModelUrl.value) {
-    const currentModel = modelList.value.find(
-      (model) => model.path === currentModelUrl.value
-    )
-    if (currentModel) {
-      // 找到select元素并设置其值
-      nextTick(() => {
-        const select = document.querySelector(
-          'select[name="model-select"]'
-        ) as HTMLSelectElement
-        if (select) {
-          select.value = currentModel.name
-        }
-      })
-    }
-  }
 })
 
 onUnmounted(() => {
@@ -234,53 +216,65 @@ const handleSetClickAnimation = () => {
 const showConfirmDialog = ref(false)
 
 const saveSettings = () => {
+  buttonType.value = 'save'
   showConfirmDialog.value = true
 }
 
+const buttonType = ref<'save' | 'reset'>('save')
 const confirmSave = async () => {
-  // 只保存必要的数据
-  const settings = {
-    lighting: {
-      directLight: {
-        intensity: tempSettings.value.directLight.intensity,
-        color: tempSettings.value.directLight.color,
-        position: {
-          x: tempSettings.value.directLight.position.x,
-          y: tempSettings.value.directLight.position.y,
-          z: tempSettings.value.directLight.position.z,
+  if (buttonType.value === 'save') {
+    // 重置设置
+    // 只保存必要的数据
+    const settings = {
+      lighting: {
+        directLight: {
+          intensity: tempSettings.value.directLight.intensity,
+          color: tempSettings.value.directLight.color,
+          position: {
+            x: tempSettings.value.directLight.position.x,
+            y: tempSettings.value.directLight.position.y,
+            z: tempSettings.value.directLight.position.z,
+          },
+        },
+        ambientLight: {
+          intensity: tempSettings.value.ambientLight.intensity,
+          color: tempSettings.value.ambientLight.color,
         },
       },
-      ambientLight: {
-        intensity: tempSettings.value.ambientLight.intensity,
-        color: tempSettings.value.ambientLight.color,
+      camera: {
+        position: {
+          x: tempSettings.value.camera.position.x,
+          y: tempSettings.value.camera.position.y,
+          z: tempSettings.value.camera.position.z,
+        },
       },
-    },
-    camera: {
-      position: {
-        x: tempSettings.value.camera.position.x,
-        y: tempSettings.value.camera.position.y,
-        z: tempSettings.value.camera.position.z,
+      model: {
+        url: currentModelUrl.value,
       },
-    },
-    model: {
-      url: currentModelUrl.value,
-    },
-    animations: {
-      loop: {
-        action: loopAction.value.action,
-        isLoop: loopAction.value.isLoop,
+      animations: {
+        loop: {
+          action: loopAction.value.action,
+          isLoop: loopAction.value.isLoop,
+        },
+        click: {
+          action: clickAction.value.action,
+          isEnable: clickAction.value.isEnable,
+        },
       },
-      click: {
-        action: clickAction.value.action,
-        isEnable: clickAction.value.isEnable,
-      },
-    },
+    }
+    await window.ipcRenderer.invoke('save-settings', settings)
+  } else {
+    window.ipcRenderer.invoke('clear-settings')
   }
-
-  await window.ipcRenderer.invoke('save-settings', settings)
   showConfirmDialog.value = false
   // 重启应用
   window.ipcRenderer.invoke('restart-app')
+}
+
+const resetSettings = () => {
+  // 展示弹框
+  buttonType.value = 'reset'
+  showConfirmDialog.value = true
 }
 </script>
 
@@ -469,12 +463,20 @@ const confirmSave = async () => {
           </div>
         </div>
       </div>
-      <button
-        @click="saveSettings"
-        class="w-[120px] mx-auto py-2 bg-blue-500 text-white rounded hover:bg-blue-600 min-w-[100px]"
-      >
-        保存设置
-      </button>
+      <div class="flex gap-12">
+        <button
+          @click="saveSettings"
+          class="w-[120px] mx-auto py-2 bg-blue-500 text-white rounded hover:bg-blue-600 min-w-[100px]"
+        >
+          保存设置
+        </button>
+        <button
+          @click="resetSettings"
+          class="w-[120px] mx-auto py-2 bg-red-500 text-white rounded hover:bg-red-600 min-w-[100px]"
+        >
+          重置默认
+        </button>
+      </div>
     </div>
 
     <!-- 确认对话框 -->
@@ -484,7 +486,7 @@ const confirmSave = async () => {
     >
       <div class="bg-white rounded-lg p-6 w-80 space-y-4">
         <h3 class="text-lg font-bold">确认保存</h3>
-        <p class="text-gray-600">保存设置后需要重启应用才能生效，是否继续？</p>
+        <p class="text-gray-600">设置后需要重启应用才能生效，是否继续？</p>
         <div class="flex justify-end gap-2">
           <button
             @click="showConfirmDialog = false"

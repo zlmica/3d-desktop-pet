@@ -47,6 +47,7 @@ let timer: number | null = null
 
 const handleCloseEditWindow = () => {
   closeEditModel()
+  window.location.reload()
 }
 
 const handleModelUrlChanged = async (_: unknown, newUrl: string) => {
