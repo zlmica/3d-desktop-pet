@@ -207,26 +207,26 @@ async function handleAddTask() {
 
 <template>
   <SubWindowLayout title="任务管理">
-    <div class="h-full flex flex-col">
+    <div class="h-full flex flex-col bg-gray-50">
       <!-- Tab 切换 -->
-      <div class="flex px-5 pt-5 gap-2.5 bg-white">
+      <div class="flex px-6 pt-6 gap-3 bg-gray-50 border-b border-gray-200">
         <button
-          class="px-5 py-2.5 rounded-t-lg text-sm transition-all duration-300 ease-in-out"
+          class="px-6 py-3 rounded-t-xl text-sm font-medium transition-all duration-300 ease-in-out"
           :class="[
             activeTab === 'list'
-              ? 'bg-green-500 text-white'
-              : 'bg-gray-100 hover:bg-gray-200',
+              ? 'bg-white text-green-600 shadow-sm border-t border-x border-gray-200'
+              : 'text-gray-600 hover:text-green-600',
           ]"
           @click="switchTab('list')"
         >
           任务列表
         </button>
         <button
-          class="px-5 py-2.5 rounded-t-lg text-sm transition-all duration-300 ease-in-out"
+          class="px-6 py-3 rounded-t-xl text-sm font-medium transition-all duration-300 ease-in-out"
           :class="[
             activeTab === 'add'
-              ? 'bg-green-500 text-white'
-              : 'bg-gray-100 hover:bg-gray-200',
+              ? 'bg-white text-green-600 shadow-sm border-t border-x border-gray-200'
+              : 'text-gray-600 hover:text-green-600',
           ]"
           @click="switchTab('add')"
         >
@@ -235,42 +235,46 @@ async function handleAddTask() {
       </div>
 
       <!-- 任务列表 -->
-      <div v-show="activeTab === 'list'" class="flex-1 overflow-y-auto p-5">
+      <div v-show="activeTab === 'list'" class="flex-1 overflow-y-auto p-6">
         <div class="flex flex-col gap-4">
           <div
             v-for="task in tasks"
             :key="task.id"
-            class="bg-white rounded-lg p-4 shadow-sm"
+            class="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow duration-300"
             :class="[
-              `border-l-4`,
-              task.priority === 'high' ? 'border-l-red-500' : '',
-              task.priority === 'medium' ? 'border-l-orange-500' : '',
-              task.priority === 'low' ? 'border-l-green-500' : '',
-              task.status === 'completed' ? 'opacity-70' : '',
-              getDueStatus(task) === 'overdue' ? 'border border-red-200' : '',
-              getDueStatus(task) === 'upcoming'
-                ? 'border border-orange-200'
+              task.priority === 'high' ? 'border-l-4 border-l-red-500' : '',
+              task.priority === 'medium'
+                ? 'border-l-4 border-l-orange-500'
                 : '',
+              task.priority === 'low' ? 'border-l-4 border-l-green-500' : '',
+              task.status === 'completed' ? 'opacity-75 bg-gray-50' : '',
+              getDueStatus(task) === 'overdue' ? 'ring-2 ring-red-100' : '',
+              getDueStatus(task) === 'upcoming' ? 'ring-2 ring-orange-100' : '',
             ]"
           >
             <!-- 任务头部 -->
             <div class="flex justify-between items-start gap-5">
-              <div class="flex items-center gap-2.5 flex-1">
-                <h4 :class="{ 'line-through': task.status === 'completed' }">
+              <div class="flex items-center gap-3 flex-1">
+                <h4
+                  class="font-medium text-gray-900"
+                  :class="{
+                    'line-through text-gray-500': task.status === 'completed',
+                  }"
+                >
                   {{ task.title }}
                 </h4>
                 <div
                   v-if="task.dueDate"
-                  class="text-xs px-2 py-0.5 rounded-full"
+                  class="text-xs px-3 py-1 rounded-full font-medium"
                   :class="[
                     getDueStatus(task) === 'overdue'
-                      ? 'bg-red-50 text-red-700'
+                      ? 'bg-red-100 text-red-700'
                       : '',
                     getDueStatus(task) === 'upcoming'
-                      ? 'bg-orange-50 text-orange-700'
+                      ? 'bg-orange-100 text-orange-700'
                       : '',
                     getDueStatus(task) === 'normal'
-                      ? 'bg-gray-100 text-gray-600'
+                      ? 'bg-gray-100 text-gray-700'
                       : '',
                   ]"
                 >
@@ -279,7 +283,7 @@ async function handleAddTask() {
               </div>
 
               <!-- 任务操作 -->
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-3">
                 <select
                   :value="task.status"
                   @change="
@@ -289,7 +293,7 @@ async function handleAddTask() {
                         ?.value as Task['status']
                     )
                   "
-                  class="px-2 py-1 rounded border border-gray-200 text-sm"
+                  class="px-3 py-1.5 rounded-lg border border-gray-200 text-sm bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
                 >
                   <option value="pending">待处理</option>
                   <option value="in-progress">进行中</option>
@@ -304,7 +308,7 @@ async function handleAddTask() {
                         .value as Task['priority']
                     )
                   "
-                  class="px-2 py-1 rounded border border-gray-200 text-sm"
+                  class="px-3 py-1.5 rounded-lg border border-gray-200 text-sm bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
                 >
                   <option value="low">低优先级</option>
                   <option value="medium">中优先级</option>
@@ -312,50 +316,51 @@ async function handleAddTask() {
                 </select>
                 <button
                   @click="deleteTask(task.id!)"
-                  class="px-2 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                  class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-sm hover:bg-red-100 transition-colors duration-200"
                 >
                   删除
                 </button>
               </div>
             </div>
 
-            <p class="text-gray-600 my-2.5">{{ task.description }}</p>
+            <p class="text-gray-600 my-3 text-sm">{{ task.description }}</p>
             <div class="text-xs text-gray-400">
               创建于: {{ new Date(task.createdAt).toLocaleString() }}
             </div>
           </div>
         </div>
-        <div v-if="tasks.length === 0" class="text-center text-gray-500 mt-4">
-          你还没有任务哦，快去添加一个吧！
+        <div v-if="tasks.length === 0" class="text-center text-gray-500 mt-8">
+          <div class="text-4xl mb-3">📝</div>
+          <p>你还没有任务哦，快去添加一个吧！</p>
         </div>
       </div>
 
       <!-- 添加任务表单 -->
-      <div v-show="activeTab === 'add'" class="flex-1 overflow-y-auto p-5">
-        <div class="max-w-2xl mx-auto bg-gray-100 p-8 rounded-lg">
-          <div class="space-y-5">
+      <div v-show="activeTab === 'add'" class="flex-1 overflow-y-auto p-6">
+        <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-sm">
+          <div class="space-y-6">
             <div class="flex flex-col gap-2">
-              <label class="font-medium">任务标题</label>
+              <label class="font-medium text-gray-700">任务标题</label>
               <input
                 v-model="newTask.title"
                 type="text"
                 placeholder="请输入任务标题"
-                class="w-full px-2 py-2 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
               />
             </div>
             <div class="flex flex-col gap-2">
-              <label class="font-medium">任务描述</label>
+              <label class="font-medium text-gray-700">任务描述</label>
               <textarea
                 v-model="newTask.description"
                 placeholder="请输入任务描述"
-                class="w-full px-2 py-2 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 min-h-[100px]"
               ></textarea>
             </div>
             <div class="flex flex-col gap-2">
-              <label class="font-medium">优先级</label>
+              <label class="font-medium text-gray-700">优先级</label>
               <select
                 v-model="newTask.priority"
-                class="w-full px-2 py-2 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
               >
                 <option value="low">低优先级</option>
                 <option value="medium">中优先级</option>
@@ -363,21 +368,21 @@ async function handleAddTask() {
               </select>
             </div>
             <div class="flex flex-col gap-2">
-              <label class="font-medium">截止时间</label>
+              <label class="font-medium text-gray-700">截止时间</label>
               <input
                 v-model="newTask.dueDate"
                 type="datetime-local"
-                class="w-full px-2 py-2 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
               />
             </div>
             <button
               @click="handleAddTask"
               :disabled="!isFormValid"
-              class="w-full py-3 rounded text-base transition-colors duration-300"
+              class="w-full py-3 rounded-lg text-base font-medium transition-all duration-300"
               :class="[
                 isFormValid
-                  ? 'bg-green-500 text-white hover:bg-green-600'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed',
+                  ? 'bg-green-500 text-white hover:bg-green-600 shadow-sm hover:shadow-md'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed',
               ]"
             >
               添加任务

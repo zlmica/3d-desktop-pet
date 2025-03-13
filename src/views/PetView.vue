@@ -280,145 +280,223 @@ const resetSettings = () => {
 
 <template>
   <SubWindowLayout title="宠物管理">
-    <!-- 修改控制区域的布局和位置 -->
-    <div class="fixed top-4 right-4 z-10 flex flex-col gap-4">
-      <!-- 修改原有的上传和选择控件样式 -->
+    <!-- 控制面板 -->
+    <div
+      class="fixed top-6 right-6 z-10 flex flex-col gap-5 max-w-[800px] pl-5"
+    >
+      <!-- 模型控制区 -->
       <div
-        class="flex items-center gap-3 bg-white/80 backdrop-blur-sm p-4 rounded-lg"
+        class="bg-white/90 backdrop-blur-md p-5 rounded-2xl shadow-lg border border-gray-100"
       >
-        <input
-          type="file"
-          ref="fileInput"
-          accept=".glb"
-          class="hidden"
-          @change="handleFileUpload"
-        />
-        <button
-          @click="triggerFileInput"
-          class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 min-w-[100px]"
-        >
-          上传模型
-        </button>
-        <select
-          name="model-select"
-          @change="selectModel"
-          class="px-4 py-2 border rounded bg-white min-w-[120px]"
-        >
-          <option value="" disabled selected>选择模型</option>
-          <option
-            v-for="model in modelList"
-            :key="model.name"
-            :value="model.name"
+        <div class="flex items-center gap-4">
+          <input
+            type="file"
+            ref="fileInput"
+            accept=".glb"
+            class="hidden"
+            @change="handleFileUpload"
+          />
+          <button
+            @click="triggerFileInput"
+            class="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-sm hover:shadow font-medium"
           >
-            {{ model.name }}
-          </option>
-        </select>
+            上传模型
+          </button>
+          <select
+            name="model-select"
+            @change="selectModel"
+            class="px-4 py-2.5 border border-gray-200 rounded-xl bg-white min-w-[160px] focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+          >
+            <option value="" disabled selected>选择模型</option>
+            <option
+              v-for="model in modelList"
+              :key="model.name"
+              :value="model.name"
+            >
+              {{ model.name }}
+            </option>
+          </select>
+        </div>
       </div>
 
       <!-- 参数控制面板 -->
-      <div class="bg-white/80 backdrop-blur-sm p-4 rounded-lg w-auto">
-        <div class="grid grid-cols-3 gap-6">
+      <div
+        class="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-100"
+      >
+        <div class="grid grid-cols-3 gap-8">
           <!-- 直射光设置 -->
-          <div class="space-y-2">
-            <h3 class="font-bold text-sm">直射光</h3>
-            <div class="space-y-1">
-              <label class="text-sm">颜色</label>
-              <input
-                type="color"
-                v-model="tempSettings.directLight.color"
-                @input="debouncedUpdateColor"
-                class="w-full h-8"
-              />
-            </div>
-            <div class="space-y-1">
-              <label class="text-sm">强度</label>
-              <input
-                type="range"
-                v-model="tempSettings.directLight.intensity"
-                min="0"
-                max="10"
-                step="0.1"
-                @input="debouncedUpdate"
-                class="w-full"
-              />
-              <div class="text-xs text-gray-500">
-                {{ formatNumber(tempSettings.directLight.intensity) }}
-              </div>
-            </div>
-            <div class="space-y-1">
-              <label class="text-sm">位置 X/Y/Z</label>
-              <div class="flex gap-2">
+          <div class="space-y-4">
+            <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+              <svg
+                class="w-4 h-4 text-yellow-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"
+                />
+              </svg>
+              直射光
+            </h3>
+            <div class="space-y-3">
+              <div class="space-y-2">
+                <label class="text-sm text-gray-600">颜色</label>
                 <input
-                  v-for="axis in ['x', 'y', 'z'] as const"
-                  :key="axis"
-                  type="number"
-                  v-model="tempSettings.directLight.position[axis]"
+                  type="color"
+                  v-model="tempSettings.directLight.color"
+                  @input="debouncedUpdateColor"
+                  class="w-full h-10 rounded-lg cursor-pointer"
+                />
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm text-gray-600">强度</label>
+                <input
+                  type="range"
+                  v-model="tempSettings.directLight.intensity"
+                  min="0"
+                  max="10"
                   step="0.1"
                   @input="debouncedUpdate"
-                  class="w-full px-2 py-1 border rounded text-sm"
+                  class="w-full accent-blue-500"
                 />
+                <div class="text-xs text-gray-500 text-right">
+                  {{ formatNumber(tempSettings.directLight.intensity) }}
+                </div>
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm text-gray-600">位置 X/Y/Z</label>
+                <div class="grid grid-cols-3 gap-2">
+                  <input
+                    v-for="axis in ['x', 'y', 'z'] as const"
+                    :key="axis"
+                    type="number"
+                    v-model="tempSettings.directLight.position[axis]"
+                    step="0.1"
+                    @input="debouncedUpdate"
+                    class="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  />
+                </div>
               </div>
             </div>
           </div>
 
           <!-- 环境光设置 -->
-          <div class="space-y-2">
-            <h3 class="font-bold text-sm">环境光</h3>
-            <div class="space-y-1">
-              <label class="text-sm">颜色</label>
-              <input
-                type="color"
-                v-model="tempSettings.ambientLight.color"
-                @input="debouncedUpdateColor"
-                class="w-full h-8"
-              />
-            </div>
-            <div class="space-y-1">
-              <label class="text-sm">强度</label>
-              <input
-                type="range"
-                v-model="tempSettings.ambientLight.intensity"
-                min="0"
-                max="10"
-                step="0.1"
-                @input="debouncedUpdate"
-                class="w-full"
-              />
-              <div class="text-xs text-gray-500">
-                {{ formatNumber(tempSettings.ambientLight.intensity) }}
+          <div class="space-y-4">
+            <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+              <svg
+                class="w-4 h-4 text-blue-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                />
+              </svg>
+              环境光
+            </h3>
+            <div class="space-y-3">
+              <div class="space-y-2">
+                <label class="text-sm text-gray-600">颜色</label>
+                <input
+                  type="color"
+                  v-model="tempSettings.ambientLight.color"
+                  @input="debouncedUpdateColor"
+                  class="w-full h-10 rounded-lg cursor-pointer"
+                />
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm text-gray-600">强度</label>
+                <input
+                  type="range"
+                  v-model="tempSettings.ambientLight.intensity"
+                  min="0"
+                  max="10"
+                  step="0.1"
+                  @input="debouncedUpdate"
+                  class="w-full accent-blue-500"
+                />
+                <div class="text-xs text-gray-500 text-right">
+                  {{ formatNumber(tempSettings.ambientLight.intensity) }}
+                </div>
               </div>
             </div>
           </div>
 
           <!-- 相机和动作控制 -->
           <div class="space-y-4">
-            <!-- 相机位置设置 -->
-            <div class="space-y-2">
-              <h3 class="font-bold text-sm">相机位置</h3>
-              <div class="space-y-1">
-                <label class="text-sm">位置 X/Y/Z</label>
-                <div class="flex gap-2">
-                  <input
-                    v-for="axis in ['x', 'y', 'z'] as const"
-                    :key="axis"
-                    type="number"
-                    v-model="tempSettings.camera.position[axis]"
-                    step="0.1"
-                    @input="debouncedUpdate"
-                    class="w-full px-2 py-1 border rounded text-sm"
+            <div class="space-y-4">
+              <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+                <svg
+                  class="w-4 h-4 text-gray-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
                   />
-                </div>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                相机位置
+              </h3>
+              <div class="grid grid-cols-3 gap-2">
+                <input
+                  v-for="axis in ['x', 'y', 'z'] as const"
+                  :key="axis"
+                  type="number"
+                  v-model="tempSettings.camera.position[axis]"
+                  step="0.1"
+                  @input="debouncedUpdate"
+                  class="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                />
               </div>
             </div>
 
-            <!-- 动作控制部分 -->
-            <div class="space-y-2">
-              <h3 class="font-bold text-sm">动作控制</h3>
-              <div class="space-y-2">
+            <!-- 动作控制 -->
+            <div class="space-y-3">
+              <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+                <svg
+                  class="w-4 h-4 text-green-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                动作控制
+              </h3>
+              <div class="space-y-3">
                 <div class="flex items-center gap-2">
                   <select
                     v-model="selectedLoopAnimation"
-                    class="flex-1 px-2 py-1.5 border rounded text-sm"
+                    class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">无动作</option>
                     <option
@@ -431,7 +509,7 @@ const resetSettings = () => {
                   </select>
                   <button
                     @click="handleSetLoopAnimation"
-                    class="px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm whitespace-nowrap"
+                    class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 text-sm font-medium shadow-sm hover:shadow"
                   >
                     设为循环
                   </button>
@@ -440,7 +518,7 @@ const resetSettings = () => {
                 <div class="flex items-center gap-2">
                   <select
                     v-model="selectedClickAnimation"
-                    class="flex-1 px-2 py-1.5 border rounded text-sm"
+                    class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">无动作</option>
                     <option
@@ -453,7 +531,7 @@ const resetSettings = () => {
                   </select>
                   <button
                     @click="handleSetClickAnimation"
-                    class="px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm whitespace-nowrap"
+                    class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 text-sm font-medium shadow-sm hover:shadow"
                   >
                     设为点击
                   </button>
@@ -463,16 +541,18 @@ const resetSettings = () => {
           </div>
         </div>
       </div>
-      <div class="flex gap-12">
+
+      <!-- 操作按钮 -->
+      <div class="flex justify-end gap-4">
         <button
           @click="saveSettings"
-          class="w-[120px] mx-auto py-2 bg-blue-500 text-white rounded hover:bg-blue-600 min-w-[100px]"
+          class="px-6 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 shadow-sm hover:shadow font-medium"
         >
           保存设置
         </button>
         <button
           @click="resetSettings"
-          class="w-[120px] mx-auto py-2 bg-red-500 text-white rounded hover:bg-red-600 min-w-[100px]"
+          class="px-6 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 shadow-sm hover:shadow font-medium"
         >
           重置默认
         </button>
@@ -482,21 +562,21 @@ const resetSettings = () => {
     <!-- 确认对话框 -->
     <div
       v-if="showConfirmDialog"
-      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
     >
-      <div class="bg-white rounded-lg p-6 w-80 space-y-4">
-        <h3 class="text-lg font-bold">确认保存</h3>
+      <div class="bg-white rounded-2xl p-6 w-96 space-y-4 shadow-xl">
+        <h3 class="text-lg font-semibold text-gray-800">确认操作</h3>
         <p class="text-gray-600">设置后需要重启应用才能生效，是否继续？</p>
-        <div class="flex justify-end gap-2">
+        <div class="flex justify-end gap-3 pt-2">
           <button
             @click="showConfirmDialog = false"
-            class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
+            class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200"
           >
             取消
           </button>
           <button
             @click="confirmSave"
-            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-sm hover:shadow"
           >
             确定
           </button>
