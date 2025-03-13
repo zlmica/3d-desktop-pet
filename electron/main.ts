@@ -3,7 +3,15 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { createTray, destroyTray } from './tray'
+import Store from 'electron-store'
+import {
+  deleteUserModel,
+  ensureDirectories,
+  getAllModels,
+  saveUserModel,
+} from './file'
 
+const store = new Store()
 createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -103,12 +111,20 @@ function createSubWindow(windowId: string, title: string) {
     subWindow.focus()
   })
 
+  subWindow.on('close', () => {
+    // 通知渲染进程关闭编辑窗口
+    if (windowId === 'pet') {
+      win?.webContents.send('close-edit-window')
+    }
+  })
+
   // 窗口关闭时从Map中删除
   subWindow.on('closed', () => {
     subWindows.delete(windowId)
   })
 
   subWindows.set(windowId, subWindow)
+
   // 在页面加载完成后设置标题
   subWindow.webContents.on('did-finish-load', () => {
     subWindow.setTitle(title)
@@ -120,7 +136,7 @@ function createSubWindow(windowId: string, title: string) {
   })
 
   // 打开调试
-  // subWindow.webContents.openDevTools();
+  // subWindow.webContents.openDevTools({ mode: 'detach' })
 }
 
 let reminderWindow: BrowserWindow | null = null
@@ -204,7 +220,10 @@ app.on('activate', () => {
   }
 })
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // 确保目录存在
+  await ensureDirectories()
+
   createReminderWindow()
   createWindow()
   createTray(() => {
@@ -236,5 +255,108 @@ app.whenReady().then(() => {
 
   ipcMain.on('open-sub-window', (_event, { windowId, title }) => {
     createSubWindow(windowId, title)
+  })
+
+  // 获取模型列表
+  ipcMain.handle('get-model-list', async () => {
+    return await getAllModels()
+  })
+
+  // 上传模型
+  ipcMain.handle('upload-model', async (_, { name, path: filePath }) => {
+    try {
+      await saveUserModel(filePath, name)
+      return { success: true }
+    } catch (error) {
+      console.error('上传模型失败:', error)
+      return { success: false, error: error }
+    }
+  })
+
+  // 删除模型
+  ipcMain.handle('delete-model', async (_, fileName) => {
+    try {
+      await deleteUserModel(fileName)
+      return { success: true }
+    } catch (error) {
+      console.error('删除模型失败:', error)
+      return { success: false, error: error }
+    }
+  })
+
+  ipcMain.on('update-model-url', (_event, newUrl) => {
+    win?.webContents.send('model-url-changed', newUrl)
+    // 广播给所有窗口
+    BrowserWindow.getAllWindows().forEach((window) => {
+      if (!window.isDestroyed()) {
+        window.webContents.send('model-url-changed', newUrl)
+      }
+    })
+  })
+
+  ipcMain.handle('save-settings', (_, settings) => {
+    store.set('settings', settings)
+  })
+
+  ipcMain.handle('get-settings', () => {
+    return store.get('settings')
+  })
+
+  // 清空配置
+  ipcMain.handle('clear-settings', () => {
+    store.clear()
+  })
+
+  ipcMain.on('update-scene-settings', (_event, settings) => {
+    // 广播给所有窗口
+    BrowserWindow.getAllWindows().forEach((window) => {
+      if (!window.isDestroyed()) {
+        window.webContents.send('scene-settings-changed', settings)
+      }
+    })
+  })
+
+  ipcMain.on('update-model-actions', (_event, actions) => {
+    // 广播给所有窗口
+    BrowserWindow.getAllWindows().forEach((window) => {
+      if (!window.isDestroyed()) {
+        window.webContents.send('model-actions-changed', actions)
+      }
+    })
+  })
+
+  ipcMain.on('update-model-action-loop', (_event, action) => {
+    // 广播给所有窗口
+    BrowserWindow.getAllWindows().forEach((window) => {
+      if (!window.isDestroyed()) {
+        window.webContents.send('model-action-loop-changed', action)
+      }
+    })
+  })
+
+  ipcMain.on('update-model-action-click', (_event, action) => {
+    // 广播给所有窗口
+    BrowserWindow.getAllWindows().forEach((window) => {
+      if (!window.isDestroyed()) {
+        window.webContents.send('model-action-click-changed', action)
+      }
+    })
+  })
+
+  // 重启应用
+  ipcMain.handle('restart-app', () => {
+    if (VITE_DEV_SERVER_URL) {
+      // 开发环境下，只重新加载窗口
+      win?.reload()
+      reminderWindow?.reload()
+      subWindows.forEach((window) => {
+        window.close()
+      })
+    } else {
+      // 生产环境下，重启整个应用
+      app.relaunch()
+      destroyTray()
+      app.quit()
+    }
   })
 })

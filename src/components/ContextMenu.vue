@@ -1,8 +1,8 @@
 <script setup>
 import { computed } from 'vue'
-import { useModel } from '../composable/useModel'
+import { useEditModel } from '../composable/useEditModel'
 
-const { loopAction } = useModel()
+const { editModel } = useEditModel()
 
 const emit = defineEmits(['close'])
 
@@ -34,15 +34,11 @@ const handleMenuClick = (menuId) => {
       })
       break
     case 'pet':
-      // ipcRenderer.send('open-sub-window', {
-      //   windowId: 'pet',
-      //   title: '宠物管理',
-      // })
-      if (loopAction.value.isLoop) {
-        loopAction.value.isLoop = false
-      } else {
-        loopAction.value.isLoop = true
-      }
+      ipcRenderer.send('open-sub-window', {
+        windowId: 'pet',
+        title: '宠物管理',
+      })
+      editModel()
       break
     case 'exit':
       // ipcRenderer.send('exit-app')
